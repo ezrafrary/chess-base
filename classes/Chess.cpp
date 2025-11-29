@@ -61,6 +61,63 @@ void Chess::FENtoBoard(const std::string& fen) {
     // 3: castling availability (KQkq or -)
     // 4: en passant target square (in algebraic notation, or -)
     // 5: halfmove clock (number of halfmoves since the last capture or pawn advance)
+    
+    _grid->forEachSquare([](ChessSquare* square, int x, int y) {
+        square->destroyBit();
+    });
+    
+    int fenIndex = 0;
+    int fenLength = fen.length();
+    
+    int boardPartEnd = fenLength;
+    for (int i = 0; i < fenLength; i++) {
+        if (fen[i] == ' ') {
+            boardPartEnd = i;
+            break;
+        }
+    }
+    
+    int rank = 7; 
+    int file = 0;
+    
+    for (int i = 0; i < boardPartEnd; i++) {
+        char c = fen[i];
+        
+        if (c == '/') {
+            rank--;
+            file = 0;
+        } else if (c >= '1' && c <= '8') {
+            file += (c - '0');
+        } else {
+            ChessPiece pieceType = NoPiece;
+            
+            bool isLowerCase = (c >= 'a' && c <= 'z');
+            int playerNumber = isLowerCase ? 1 : 0;
+            
+            char pieceChar = isLowerCase ? c : (c + 32);
+            
+            switch (pieceChar) {
+                case 'p': pieceType = Pawn; break;
+                case 'n': pieceType = Knight; break;
+                case 'b': pieceType = Bishop; break;
+                case 'r': pieceType = Rook; break;
+                case 'q': pieceType = Queen; break;
+                case 'k': pieceType = King; break;
+            }
+            
+            if (pieceType != NoPiece && file < 8 && rank >= 0) {
+                Bit* piece = PieceForPlayer(playerNumber, pieceType);
+                int gameTag = pieceType + (playerNumber == 1 ? 128 : 0);
+                piece->setGameTag(gameTag);
+                
+                ChessSquare* square = _grid->getSquare(file, rank);
+                piece->setPosition(square->getPosition());
+                square->setBit(piece);
+            }
+            
+            file++;
+        }
+    }
 }
 
 bool Chess::actionForEmptyHolder(BitHolder &holder)
