@@ -13,6 +13,8 @@ namespace ClassGame {
         Game *game = nullptr;
         bool gameOver = false;
         int gameWinner = -1;
+        bool whiteAI = false;
+        bool blackAI = false;
 
         //
         // game starting point
@@ -21,6 +23,8 @@ namespace ClassGame {
         void GameStartUp() 
         {
             game = nullptr;
+            whiteAI = false;
+            blackAI = false;
         }
 
         //
@@ -30,8 +34,7 @@ namespace ClassGame {
         void RenderGame() 
         {
                 ImGui::DockSpaceOverViewport();
-
-                //ImGui::ShowDemoWindow();
+                Chess* chessGame = dynamic_cast<Chess*>(game);
 
                 ImGui::Begin("Settings");
 
@@ -43,6 +46,8 @@ namespace ClassGame {
                         game->setUpBoard();
                         gameOver = false;
                         gameWinner = -1;
+                        whiteAI = false;
+                        blackAI = false;
                     }
                 }
                 if (!game) {
@@ -65,6 +70,8 @@ namespace ClassGame {
                     if (ImGui::Button("Start Chess")) {
                         game = new Chess();
                         game->setUpBoard();
+                        whiteAI = false;
+                        blackAI = false;
                     }
                 } else {
                     ImGui::Text("Current Player Number: %d", game->getCurrentPlayer()->playerNumber());
@@ -76,6 +83,11 @@ namespace ClassGame {
                         ImGui::Text("%s", stateString.substr(y*stride,stride).c_str());
                     }
                     ImGui::Text("Current Board State: %s", game->stateString().c_str());
+                    
+                    if (chessGame) {
+                        ImGui::Checkbox("White", &whiteAI);
+                        ImGui::Checkbox("Black", &blackAI);
+                    }
                 }
                 ImGui::End();
 
@@ -85,6 +97,13 @@ namespace ClassGame {
                     {
                         game->updateAI();
                     }
+                    if (chessGame && !gameOver) {
+                        int currentPlayer = game->getCurrentPlayer()->playerNumber();
+                        if ((currentPlayer == 0 && whiteAI) || (currentPlayer == 1 && blackAI)) {
+                            chessGame->AIMove();
+                        }
+                    }
+                    
                     game->drawFrame();
                 }
                 ImGui::End();
